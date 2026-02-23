@@ -57,11 +57,9 @@
                         <form action="{{ url_for('add_event', record_id=record.id) }}" method="post" class="row g-2 mb-3">
                             <div class="col-md-3">
                                 <input type="text" name="event_date" class="form-control form-control-sm date-mask" placeholder="Дата (ДД.ММ.ГГГГ)" inputmode="numeric">
-                                <small class="text-muted">8 цифр</small>
                             </div>
                             <div class="col-md-3">
                                 <input type="text" name="event_time" class="form-control form-control-sm time-mask" placeholder="Время (ЧЧ:ММ)" inputmode="numeric">
-                                <small class="text-muted">4 цифры</small>
                             </div>
                             <div class="col-md-4">
                                 <input type="text" name="description" class="form-control form-control-sm" placeholder="Описание" required>
@@ -74,7 +72,7 @@
                         <!-- Кнопки управления записью -->
                         <div class="row g-2">
                             <div class="col-6 col-md-auto">
-                                <a href="{{ url_for('edit', record_id=record.id) }}" class="btn btn-sm btn-warning w-100">Редактировать запись</a>
+                                <a href="{{ url_for('edit', record_id=record.id) }}" class="btn btn-sm btn-warning w-100">Редактировать</a>
                             </div>
                             <div class="col-6 col-md-auto">
                                 <form action="{{ url_for('delete', record_id=record.id) }}" method="post" onsubmit="return confirm('Удалить всю запись?')">

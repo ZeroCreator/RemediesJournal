@@ -9,6 +9,21 @@
         .container {
             max-width: 900px;
         }
+        /* Пастельный серо-зелёный для навбара */
+        .bg-pastel-green {
+            background-color: #C0D0B0 !important;
+        }
+        /* Тёмный серо-зелёный для кнопки экспорта */
+        .btn-dark-green {
+            background-color: #6B8E6B;
+            color: white;
+            border-color: #4F6F4F;
+        }
+        .btn-dark-green:hover {
+            background-color: #4F6F4F;
+            border-color: #2C4A2C;
+            color: white;
+        }
         /* Анимация для автоматического скрытия flash-сообщений */
         .alert {
             animation: fadeOut 5s ease-in-out forwards;
@@ -21,12 +36,12 @@
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <nav class="navbar navbar-expand-lg navbar-light bg-pastel-green">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('index') }}">Remedies Journal</a>
+            <a class="navbar-brand" href="{{ url_for('index') }}" style="color: #2C3E2C;">Remedies Journal</a>
             <div>
                 <a href="{{ url_for('add') }}" class="btn btn-light btn-sm">+ Добавить запись</a>
-                <a href="{{ url_for('export') }}" class="btn btn-outline-light btn-sm">Экспорт в Excel</a>
+                <a href="{{ url_for('export') }}" class="btn btn-dark-green btn-sm">Экспорт в Excel</a>
             </div>
         </div>
     </nav>

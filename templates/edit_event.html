@@ -7,13 +7,11 @@
 <form method="post">
     <div class="mb-3">
         <label for="event_date" class="form-label">Дата события (необязательно)</label>
-        <input type="text" class="form-control date-mask" id="event_date" name="event_date" value="{{ event_date or '' }}" placeholder="15.03.2025" inputmode="numeric">
-        <small class="text-muted">8 цифр: ддммгггг</small>
+        <input type="text" class="form-control date-mask" id="event_date" name="event_date" value="{{ event_date or '' }}" placeholder="dd.mm.yyyy" inputmode="numeric">
     </div>
     <div class="mb-3">
         <label for="event_time" class="form-label">Время события (необязательно)</label>
-        <input type="text" class="form-control time-mask" id="event_time" name="event_time" value="{{ event_time or '' }}" placeholder="14:30" inputmode="numeric">
-        <small class="text-muted">4 цифры: ччмм</small>
+        <input type="text" class="form-control time-mask" id="event_time" name="event_time" value="{{ event_time or '' }}" placeholder="hh:mm" inputmode="numeric">
     </div>
     <div class="mb-3">
         <label for="description" class="form-label">Описание <span class="text-danger">*</span></label>
