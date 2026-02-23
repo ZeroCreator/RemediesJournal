@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Редактировать' if record else 'Добавить' }} запись{% endblock %}
+
+{% block content %}
+<h1>{{ 'Редактировать' if record else 'Добавить' }} запись</h1>
+
+<form method="post">
+    <div class="mb-3">
+        <label for="date" class="form-label">Дата приема <span class="text-danger">*</span></label>
+        <input type="text" class="form-control date-mask" id="date" name="date" value="{{ date_display or '' }}" placeholder="15.03.2025" inputmode="numeric" required>
+        <small class="text-muted">Введите 8 цифр: ддммгггг</small>
+    </div>
+    <div class="mb-3">
+        <label for="time" class="form-label">Время приема (необязательно)</label>
+        <input type="text" class="form-control time-mask" id="time" name="time" value="{{ time or '' }}" placeholder="14:30" inputmode="numeric">
+        <small class="text-muted">Введите 4 цифры: ччмм</small>
+    </div>
+    <div class="mb-3">
+        <label for="remedy" class="form-label">Препарат <span class="text-danger">*</span></label>
+        <input type="text" class="form-control" id="remedy" name="remedy" value="{{ remedy or record.remedy if record else '' }}" required>
+    </div>
+    <div class="mb-3">
+        <label for="potency" class="form-label">Потенция <span class="text-danger">*</span></label>
+        <input type="text" class="form-control" id="potency" name="potency" value="{{ potency or record.potency if record else '' }}" required>
+    </div>
+    <button type="submit" class="btn btn-success">Сохранить</button>
+    <a href="{{ url_for('index') }}" class="btn btn-secondary">Отмена</a>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.date-mask').forEach(function(el) {
+            new Cleave(el, {
+                date: true,
+                datePattern: ['d', 'm', 'Y'],
+                delimiter: '.'
+            });
+        });
+        document.querySelectorAll('.time-mask').forEach(function(el) {
+            new Cleave(el, {
+                time: true,
+                timePattern: ['h', 'm']
+            });
+        });
+    });
+</script>
+{% endblock %}

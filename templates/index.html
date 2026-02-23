@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Главная{% endblock %}
+
+{% block content %}
+<h1>Журнал приёмов</h1>
+
+{% if records %}
+    <div class="accordion" id="recordsAccordion">
+        {% for record in records %}
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="heading{{ record.id }}">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ record.id }}">
+                        <strong>{{ record.get('date-time', '') }}</strong> &nbsp;—&nbsp;
+                        {{ record.remedy }} ({{ record.potency }})
+                    </button>
+                </h2>
+                <div id="collapse{{ record.id }}" class="accordion-collapse collapse" data-bs-parent="#recordsAccordion">
+                    <div class="accordion-body">
+                        <!-- Список событий -->
+                        {% if record.events and record.events|length > 0 %}
+                            <h6>События:</h6>
+                            <ul class="list-group mb-3">
+                                {% for event in record.events %}
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>
+                                            {% if event.date and event.time %}
+                                                <strong>{{ event.date|format_date }} {{ event.time }}</strong>: {{ event.description }}
+                                            {% elif event.date %}
+                                                <strong>{{ event.date|format_date }}</strong>: {{ event.description }}
+                                            {% elif event.time %}
+                                                <strong>{{ event.time }}</strong>: {{ event.description }}
+                                            {% else %}
+                                                {{ event.description }}
+                                            {% endif %}
+                                        </span>
+                                        <div>
+                                            <a href="{{ url_for('edit_event', record_id=record.id, event_index=loop.index0) }}" class="btn btn-sm btn-outline-primary me-1" title="Редактировать">✎</a>
+                                            <form action="{{ url_for('delete_event', record_id=record.id, event_index=loop.index0) }}" method="post" style="display:inline;">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Удалить событие?')" title="Удалить">✖</button>
+                                            </form>
+                                        </div>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="text-muted">Нет дополнительных событий</p>
+                        {% endif %}
+
+                        <!-- Форма добавления нового события (с датой и временем) -->
+                        <form action="{{ url_for('add_event', record_id=record.id) }}" method="post" class="row g-2 mb-3">
+                            <div class="col-md-3">
+                                <input type="text" name="event_date" class="form-control form-control-sm date-mask" placeholder="Дата (ДД.ММ.ГГГГ)" inputmode="numeric">
+                                <small class="text-muted">8 цифр</small>
+                            </div>
+                            <div class="col-md-3">
+                                <input type="text" name="event_time" class="form-control form-control-sm time-mask" placeholder="Время (ЧЧ:ММ)" inputmode="numeric">
+                                <small class="text-muted">4 цифры</small>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="text" name="description" class="form-control form-control-sm" placeholder="Описание" required>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-sm btn-primary w-100">+ Добавить</button>
+                            </div>
+                        </form>
+
+                        <!-- Кнопки управления записью -->
+                        <div class="d-flex gap-2">
+                            <a href="{{ url_for('edit', record_id=record.id) }}" class="btn btn-sm btn-warning">Редактировать запись</a>
+                            <form action="{{ url_for('delete', record_id=record.id) }}" method="post" onsubmit="return confirm('Удалить всю запись?')">
+                                <button type="submit" class="btn btn-sm btn-danger">Удалить запись</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p class="alert alert-info">Пока нет записей. <a href="{{ url_for('add') }}">Добавьте первую</a>.</p>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.date-mask').forEach(function(el) {
+            new Cleave(el, {
+                date: true,
+                datePattern: ['d', 'm', 'Y'],
+                delimiter: '.'
+            });
+        });
+        document.querySelectorAll('.time-mask').forEach(function(el) {
+            new Cleave(el, {
+                time: true,
+                timePattern: ['h', 'm']
+            });
+        });
+    });
+</script>
+{% endblock %}

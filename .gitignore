@@ -1,0 +1,19 @@
+# Virtual environment
+venv/
+env/
+ENV/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment variables
+.env
+
+# Local data file (optional, if you want to keep a local copy)
+data.json
+
+# VSCode / IDE settings
+.vscode/
+.idea/

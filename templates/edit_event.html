@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Редактировать событие{% endblock %}
+
+{% block content %}
+<h1>Редактировать событие</h1>
+
+<form method="post">
+    <div class="mb-3">
+        <label for="event_date" class="form-label">Дата события (необязательно)</label>
+        <input type="text" class="form-control date-mask" id="event_date" name="event_date" value="{{ event_date or '' }}" placeholder="15.03.2025" inputmode="numeric">
+        <small class="text-muted">8 цифр: ддммгггг</small>
+    </div>
+    <div class="mb-3">
+        <label for="event_time" class="form-label">Время события (необязательно)</label>
+        <input type="text" class="form-control time-mask" id="event_time" name="event_time" value="{{ event_time or '' }}" placeholder="14:30" inputmode="numeric">
+        <small class="text-muted">4 цифры: ччмм</small>
+    </div>
+    <div class="mb-3">
+        <label for="description" class="form-label">Описание <span class="text-danger">*</span></label>
+        <textarea class="form-control" id="description" name="description" rows="2" required>{{ event_description }}</textarea>
+    </div>
+    <button type="submit" class="btn btn-success">Сохранить</button>
+    <a href="{{ url_for('index') }}" class="btn btn-secondary">Отмена</a>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.date-mask').forEach(function(el) {
+            new Cleave(el, {
+                date: true,
+                datePattern: ['d', 'm', 'Y'],
+                delimiter: '.'
+            });
+        });
+        document.querySelectorAll('.time-mask').forEach(function(el) {
+            new Cleave(el, {
+                time: true,
+                timePattern: ['h', 'm']
+            });
+        });
+    });
+</script>
+{% endblock %}
