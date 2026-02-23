@@ -9,9 +9,16 @@
         {% for record in records %}
             <div class="accordion-item mb-2 border">
                 <h2 class="accordion-header" id="heading{{ record.id }}">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ record.id }}">
-                        <strong>{{ record.get('date-time', '') }}</strong> &nbsp;—&nbsp;
-                        {{ record.remedy }} ({{ record.potency }})
+                    <button class="accordion-button collapsed d-flex align-items-start" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ record.id }}">
+                        <div style="min-width: 120px;">
+                            <strong>{{ record.date_show|format_date }}</strong>
+                            {% if record.time_show %}
+                                <div class="small text-muted">{{ record.time_show }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="ms-3">
+                            {{ record.remedy }} ({{ record.potency }})
+                        </div>
                     </button>
                 </h2>
                 <div id="collapse{{ record.id }}" class="accordion-collapse collapse" data-bs-parent="#recordsAccordion">
@@ -64,7 +71,7 @@
                             </div>
                         </form>
 
-                        <!-- Кнопки управления записью (аккуратные на широких экранах) -->
+                        <!-- Кнопки управления записью -->
                         <div class="row g-2">
                             <div class="col-6 col-md-auto">
                                 <a href="{{ url_for('edit', record_id=record.id) }}" class="btn btn-sm btn-warning w-100">Редактировать запись</a>

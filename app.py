@@ -1,14 +1,9 @@
 import json
 import os
 import re
-import logging
-import traceback
 import time
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, flash, send_file
-from openpyxl import Workbook
-from openpyxl.styles import Font, PatternFill, Alignment
-from openpyxl.utils import get_column_letter
 from io import BytesIO
 import yadisk
 from dotenv import load_dotenv
@@ -19,26 +14,17 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'default-secret-key-change-me')
 
-# Настройка логирования
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-# Фильтр для форматирования даты в шаблонах
+# Фильтр для отображения даты в шаблонах (ДД-ММ-ГГГГ)
 @app.template_filter('format_date')
 def format_date_filter(iso_date):
     if iso_date and re.match(r'^\d{4}-\d{2}-\d{2}$', iso_date):
         year, month, day = iso_date.split('-')
-        return f"{day}.{month}.{year}"
+        return f"{day}-{month}-{year}"
     return iso_date
 
 # Константы из окружения
 YANDEX_TOKEN = os.getenv('YANDEX_TOKEN')
 REMOTE_PATH = os.getenv('REMOTE_PATH', '/remedies_journal.json')
-LOCAL_FALLBACK = os.getenv('LOCAL_FALLBACK', 'data.json')
-
-logger.info(f"YANDEX_TOKEN: {'задан' if YANDEX_TOKEN else 'НЕ ЗАДАН'}")
-logger.info(f"REMOTE_PATH: {REMOTE_PATH}")
-logger.info(f"LOCAL_FALLBACK: {LOCAL_FALLBACK}")
 
 # --- Работа с Яндекс.Диском ---
 def ensure_remote_dir(y, remote_path):
@@ -51,9 +37,8 @@ def ensure_remote_dir(y, remote_path):
             try:
                 if not y.exists(remote_dir):
                     y.mkdir(remote_dir)
-                    logger.info(f"Создана директория {remote_dir}")
-            except Exception as e:
-                logger.warning(f"Не удалось создать директорию {remote_dir}: {str(e)}")
+            except Exception:
+                pass
 
 def upload_with_retry(y, buf, remote_path, max_retries=3):
     """Загружает файл с повторными попытками. При последней попытке удаляет существующий файл."""
@@ -61,25 +46,21 @@ def upload_with_retry(y, buf, remote_path, max_retries=3):
         try:
             y.upload(buf, remote_path, overwrite=True)
             return True
-        except yadisk.exceptions.ConflictError as e:
+        except yadisk.exceptions.ConflictError:
             if attempt == max_retries - 1:
-                logger.warning(f"ConflictError, пробуем удалить файл и повторить")
                 try:
                     if y.exists(remote_path):
                         y.remove(remote_path)
                     buf.seek(0)
                     y.upload(buf, remote_path)
                     return True
-                except Exception as e2:
-                    logger.error(f"Не удалось удалить и перезаписать: {e2}")
-                    raise
+                except Exception:
+                    return False
             else:
-                logger.warning(f"ConflictError, повтор {attempt+2} через 1с")
                 time.sleep(1)
                 buf.seek(0)
-        except Exception as e:
-            logger.error(f"Другая ошибка при загрузке: {e}")
-            raise
+        except Exception:
+            return False
     return False
 
 def read_data():
@@ -94,45 +75,39 @@ def read_data():
                 json_str = buf.getvalue().decode('utf-8')
                 return json.loads(json_str)
             else:
-                logger.info(f"Файл {REMOTE_PATH} не найден на диске")
                 return []
-        except Exception as e:
-            logger.error(f"Ошибка чтения с Яндекс.Диска: {str(e)}")
-            logger.error(traceback.format_exc())
+        except Exception:
             return []
     else:
-        logger.error("YANDEX_TOKEN не задан")
         return []
 
 def write_data(data):
     """Записывает данные на Яндекс.Диск. Возвращает True при успехе, иначе False."""
     if not YANDEX_TOKEN:
-        logger.error("YANDEX_TOKEN не задан, запись невозможна")
         return False
 
     try:
         y = yadisk.YaDisk(token=YANDEX_TOKEN)
         ensure_remote_dir(y, REMOTE_PATH)
 
-        # Если данные пусты, удаляем файл на диске (чтобы не писать пустой JSON)
+        # Если данные пусты, удаляем файл на диске
         if not data:
-            logger.info("Данные пусты, удаляем файл на диске")
             if y.exists(REMOTE_PATH):
                 y.remove(REMOTE_PATH)
-                logger.info("Файл удалён")
             return True
 
         json_str = json.dumps(data, ensure_ascii=False, indent=2)
-        logger.info(f"Размер данных для записи: {len(json_str)} байт, записей: {len(data)}")
         buf = BytesIO(json_str.encode('utf-8'))
-        success = upload_with_retry(y, buf, REMOTE_PATH)
-        if success:
-            logger.info("Данные успешно записаны на Яндекс.Диск.")
-        return success
-    except Exception as e:
-        logger.error(f"Ошибка записи на Яндекс.Диск: {str(e)}")
-        logger.error(traceback.format_exc())
+        return upload_with_retry(y, buf, REMOTE_PATH)
+    except Exception:
         return False
+
+def format_date_for_input(iso_date):
+    """Преобразует ISO дату в ДД.ММ.ГГГГ для полей ввода."""
+    if iso_date and re.match(r'^\d{4}-\d{2}-\d{2}$', iso_date):
+        year, month, day = iso_date.split('-')
+        return f"{day}.{month}.{year}"
+    return iso_date
 
 def generate_id():
     return datetime.now().strftime('%Y%m%d%H%M%S%f')
@@ -142,32 +117,31 @@ def parse_date(date_str):
     date_str = date_str.strip()
     if not date_str:
         return ''
+    # ДД.ММ.ГГГГ
     match = re.match(r'^(\d{2})\.(\d{2})\.(\d{4})$', date_str)
     if match:
         day, month, year = match.groups()
         return f"{year}-{month}-{day}"
+    # ГГГГ-ММ-ДД
     match = re.match(r'^(\d{4})-(\d{2})-(\d{2})$', date_str)
     if match:
         return date_str
+    # ДДММГГГГ (8 цифр)
     match = re.match(r'^(\d{2})(\d{2})(\d{4})$', date_str)
     if match:
         day, month, year = match.groups()
         return f"{year}-{month}-{day}"
     return ''
 
-def format_date_for_display(iso_date):
-    if iso_date and re.match(r'^\d{4}-\d{2}-\d{2}$', iso_date):
-        year, month, day = iso_date.split('-')
-        return f"{day}.{month}.{year}"
-    return iso_date
-
 def parse_time(time_str):
     time_str = time_str.strip()
     if not time_str:
         return ''
+    # ЧЧ:ММ
     if re.match(r'^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$', time_str):
         parts = time_str.split(':')
         return f"{int(parts[0]):02d}:{parts[1]}"
+    # ЧЧММ (4 цифры)
     match = re.match(r'^([0-1][0-9]|2[0-3])([0-5][0-9])$', time_str)
     if match:
         return f"{match.group(1)}:{match.group(2)}"
@@ -178,9 +152,18 @@ def validate_time(time_str):
 
 # --- Маршруты ---
 @app.route('/')
+@app.route('/')
 def index():
     records = read_data()
-    records.sort(key=lambda x: x.get('date-time', ''), reverse=True)  # более поздние сверху
+    records.sort(key=lambda x: x.get('date-time', ''))
+    # Разделяем дату и время для отображения
+    for r in records:
+        dt = r.get('date-time', '')
+        if ' ' in dt:
+            r['date_show'], r['time_show'] = dt.split(' ', 1)
+        else:
+            r['date_show'] = dt
+            r['time_show'] = ''
     return render_template('index.html', records=records)
 
 @app.route('/add', methods=['GET', 'POST'])
@@ -269,7 +252,7 @@ def edit(record_id):
     parts = dt.split(' ')
     date_part = parts[0] if len(parts) > 0 else ''
     time_part = parts[1] if len(parts) > 1 else ''
-    date_display = format_date_for_display(date_part)
+    date_display = format_date_for_input(date_part)  # для поля ввода нужны точки
     return render_template('add_edit.html', record=record,
                            date_display=date_display, time=time_part,
                            remedy=record.get('remedy', ''),
@@ -277,11 +260,8 @@ def edit(record_id):
 
 @app.route('/delete/<record_id>', methods=['POST'])
 def delete(record_id):
-    logger.info(f"Удаление записи с id: {record_id}")
     records = read_data()
-    logger.info(f"Записей до удаления: {len(records)}")
     new_records = [r for r in records if r['id'] != record_id]
-    logger.info(f"Записей после удаления: {len(new_records)}")
     if write_data(new_records):
         flash('Запись удалена', 'success')
     else:
@@ -393,7 +373,7 @@ def edit_event(record_id, event_index):
             flash('Ошибка при сохранении на Яндекс.Диск', 'danger')
         return redirect(url_for('index'))
 
-    display_date = format_date_for_display(event.get('date', '')) if event.get('date') else ''
+    display_date = format_date_for_input(event.get('date', '')) if event.get('date') else ''
     return render_template('edit_event.html',
                            record_id=record_id,
                            event_index=event_index,
