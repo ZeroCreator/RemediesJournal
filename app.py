@@ -152,10 +152,10 @@ def validate_time(time_str):
 
 # --- Маршруты ---
 @app.route('/')
-@app.route('/')
 def index():
     records = read_data()
-    records.sort(key=lambda x: x.get('date-time', ''))
+    # Сортировка от новых к старым (reverse=True)
+    records.sort(key=lambda x: x.get('date-time', ''), reverse=True)
     # Разделяем дату и время для отображения
     for r in records:
         dt = r.get('date-time', '')

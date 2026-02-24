@@ -7,7 +7,7 @@
 <form method="post">
     <div class="mb-3">
         <label for="event_date" class="form-label">Дата события (необязательно)</label>
-        <input type="text" class="form-control date-mask" id="event_date" name="event_date" value="{{ event_date or '' }}" placeholder="dd.mm.yyyy" inputmode="numeric">
+        <input type="text" class="form-control date-mask" id="event_date" name="event_date" value="{{ event_date or '' }}" placeholder="dd.mm.YYYY" inputmode="numeric">
     </div>
     <div class="mb-3">
         <label for="event_time" class="form-label">Время события (необязательно)</label>

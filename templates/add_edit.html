@@ -7,13 +7,11 @@
 <form method="post">
     <div class="mb-3">
         <label for="date" class="form-label">Дата приема <span class="text-danger">*</span></label>
-        <input type="text" class="form-control date-mask" id="date" name="date" value="{{ date_display or '' }}" placeholder="15.03.2025" inputmode="numeric" required>
-        <small class="text-muted">Введите 8 цифр: ддммгггг</small>
+        <input type="text" class="form-control date-mask" id="date" name="date" value="{{ date_display or '' }}" placeholder="dd.mm.YYYY" inputmode="numeric" required>
     </div>
     <div class="mb-3">
         <label for="time" class="form-label">Время приема (необязательно)</label>
-        <input type="text" class="form-control time-mask" id="time" name="time" value="{{ time or '' }}" placeholder="14:30" inputmode="numeric">
-        <small class="text-muted">Введите 4 цифры: ччмм</small>
+        <input type="text" class="form-control time-mask" id="time" name="time" value="{{ time or '' }}" placeholder="hh:mm" inputmode="numeric">
     </div>
     <div class="mb-3">
         <label for="remedy" class="form-label">Препарат <span class="text-danger">*</span></label>
